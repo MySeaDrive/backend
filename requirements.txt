@@ -1,0 +1,9 @@
+fastapi
+sqlmodel
+supabase
+python-dotenv
+psycopg2-binary
+python-jose[cryptography]
+
+# dev
+ipython
