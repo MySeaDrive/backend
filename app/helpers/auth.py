@@ -6,7 +6,6 @@ from supabase import create_client, Client
 from ..models import User
 from sqlmodel import Session, select
 from ..helpers.db import engine
-
 from dotenv import load_dotenv
 import os
 

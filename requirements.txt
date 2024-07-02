@@ -4,6 +4,7 @@ supabase
 python-dotenv
 psycopg2-binary
 python-jose[cryptography]
+boto3
 
 # dev
 ipython
