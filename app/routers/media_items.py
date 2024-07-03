@@ -1,43 +1,19 @@
-from fastapi import APIRouter, UploadFile, BackgroundTasks, Depends, HTTPException
-from tempfile import NamedTemporaryFile
-from ..helpers.storage import copy_to_storage, s3_client
-from ..models import MediaItem, UploadUrlsRequest, User
+from fastapi import APIRouter, Depends, HTTPException
+from ..helpers.storage import s3_client
+from ..models import MediaItem, UploadUrlsRequest, User, NewMediaItem
 from ..helpers.db import engine
 from ..helpers.auth import get_current_user
 from sqlmodel import Session, select
 from typing import Dict
-import boto3
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 import os
+from uuid import uuid4
 
 # Load environment variables from the .env file
 load_dotenv('./secrets/.env')
 
 media_items_router = APIRouter(prefix='/media', tags=["Media Items"])
-
-@media_items_router.post('/upload')
-async def upload(file: UploadFile, background_tasks: BackgroundTasks, dive: int | None = None):
-
-    # Save the file temporarily
-    with NamedTemporaryFile(delete=False) as temp_file:
-        contents = await file.read()
-        temp_file.write(contents)
-        temp_file_path = temp_file.name
-
-    # Schedule the storage upload task to run in the background
-    user_id = None
-    background_tasks.add_task(copy_to_storage, user_id, dive, temp_file_path, file.filename, file.content_type)
-
-    return {'Info': 'Uploaded'}
-
-@media_items_router.get('/list')
-async def list_all_items() -> list[MediaItem]:
-
-    with Session(engine) as session:
-        query = select(MediaItem)
-        media_items = session.exec(query).all()
-        return media_items
 
 @media_items_router.post('/get_upload_urls')
 async def get_upload_urls(request: UploadUrlsRequest, current_user: User = Depends(get_current_user)) -> Dict[str, str]:
@@ -70,7 +46,7 @@ async def get_upload_urls(request: UploadUrlsRequest, current_user: User = Depen
             presigned_url = s3_client.generate_presigned_url('put_object',
                 Params={
                     'Bucket': bucket_name,
-                    'Key': file.name,
+                    'Key': f"{uuid4()}_raw{os.path.splitext(file.name)[1]}",
                     'ContentType': file.content_type
                 },
                 ExpiresIn=3600  # URL valid for 1 hour
@@ -80,3 +56,18 @@ async def get_upload_urls(request: UploadUrlsRequest, current_user: User = Depen
             raise HTTPException(status_code=500, detail=f"Failed to generate presigned URL: {str(e)}")
 
     return upload_urls
+
+@media_items_router.post('/save')
+async def save(new_media_item: NewMediaItem, dive_id:int = None, current_user: User = Depends(get_current_user)) -> MediaItem:
+
+    with Session(engine) as session:
+        media_item = MediaItem(user_id=current_user.id,
+                        filename=new_media_item.filename, 
+                        raw_url=new_media_item.raw_url,
+                        processed_url=new_media_item.raw_url, # Same for now as raw
+                        mime_type=new_media_item.mime_type,
+                        dive_id=dive_id)
+        session.add(media_item)
+        session.commit()
+        session.refresh(media_item)
+        return media_item

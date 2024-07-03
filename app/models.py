@@ -31,6 +31,11 @@ class Dive(SQLModel, table=True):
 class NewDive(BaseModel):
     name: str
 
+class NewMediaItem(BaseModel):
+    filename: str
+    raw_url: str
+    mime_type: str # TODO Literal['image/jpeg','image/png','image/gif','image/bmp','image/webp','image/svg+xml','video/mp4','video/webm','video/ogg','video/x-msvideo','video/quicktime']
+
 class LoginData(BaseModel):
     email: str
     password: str
