@@ -1,12 +1,22 @@
-from pydantic import BaseModel
-from typing import Optional, Literal
-from sqlmodel import SQLModel, Field
+from pydantic import BaseModel, ConfigDict
+from typing import Optional, List
+from sqlmodel import SQLModel, Field, Relationship
 from uuid import UUID
 
 class User(SQLModel, table=True):
     __tablename__ = 'users'
 
     id: UUID = Field(default=None, primary_key=True)
+
+class Dive(SQLModel, table=True):
+
+    __tablename__ = 'dives'
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field()
+    user_id: UUID = Field(foreign_key= 'users.id') # Diver
+
+    media_items: List["MediaItem"] = Relationship(back_populates="dive")
 
 class MediaItem(SQLModel, table=True):
 
@@ -16,25 +26,19 @@ class MediaItem(SQLModel, table=True):
     filename: Optional[str] = None
     raw_url: str
     processed_url: Optional[str] = None
-    mime_type: str # TODO Literal['image/jpeg','image/png','image/gif','image/bmp','image/webp','image/svg+xml','video/mp4','video/webm','video/ogg','video/x-msvideo','video/quicktime']
-    user_id: UUID # Uploader
-    dive_id: Optional[int] = None
+    mime_type: str
+    user_id: UUID = Field(foreign_key= 'users.id') # Uploader
+    dive_id: Optional[int] = Field(default= None, foreign_key='dives.id')
 
-class Dive(SQLModel, table=True):
-
-    __tablename__ = 'dives'
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field()
-    user_id: UUID # Diver
+    dive: Optional[Dive] = Relationship(back_populates="media_items")
 
 class NewDive(BaseModel):
     name: str
 
 class NewMediaItem(BaseModel):
     filename: str
-    raw_url: str
-    mime_type: str # TODO Literal['image/jpeg','image/png','image/gif','image/bmp','image/webp','image/svg+xml','video/mp4','video/webm','video/ogg','video/x-msvideo','video/quicktime']
+    pre_signed_url: str
+    mime_type: str
 
 class LoginData(BaseModel):
     email: str
@@ -47,4 +51,21 @@ class UploadFileInfo(BaseModel):
     size: int
 
 class UploadUrlsRequest(BaseModel):
-    files: list[UploadFileInfo]
+    files: List[UploadFileInfo]
+
+class MediaItemResponse(BaseModel):
+    id: int
+    filename: Optional[str]
+    raw_url: str
+    processed_url: Optional[str]
+    mime_type: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+class DiveResponse(BaseModel):
+    id: int
+    name: str
+    user_id: UUID
+    media_items: List[MediaItemResponse]
+
+    model_config = ConfigDict(from_attributes=True)

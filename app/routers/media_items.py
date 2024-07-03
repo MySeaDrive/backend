@@ -8,6 +8,7 @@ from typing import Dict
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 import os
+import json
 from uuid import uuid4
 
 # Load environment variables from the .env file
@@ -17,36 +18,16 @@ media_items_router = APIRouter(prefix='/media', tags=["Media Items"])
 
 @media_items_router.post('/get_upload_urls')
 async def get_upload_urls(request: UploadUrlsRequest, current_user: User = Depends(get_current_user)) -> Dict[str, str]:
-    bucket_name = f"user-{current_user.id}"
+    bucket_name = os.getenv("B2_BUCKET")
     
-    # Check if the bucket exists, if not create it
-    try:
-        s3_client.head_bucket(Bucket=bucket_name)
-    except ClientError:
-        try:
-            s3_client.create_bucket(Bucket=bucket_name)
-            
-            # Set CORS configuration
-            cors_configuration = {
-                'CORSRules': [{
-                    'AllowedHeaders': ['*'],
-                    'AllowedMethods': ['GET', 'PUT', 'POST', 'DELETE'],
-                    'AllowedOrigins': [os.getenv('FRONTEND_URL', 'http://localhost:3000')],
-                    'ExposeHeaders': ['ETag']
-                }]
-            }
-            s3_client.put_bucket_cors(Bucket=bucket_name, CORSConfiguration=cors_configuration)
-            
-        except ClientError as e:
-            raise HTTPException(status_code=500, detail=f"Failed to create bucket: {str(e)}")
-
     upload_urls = {}
     for file in request.files:
         try:
+            file_key = f"user-{current_user.id}/{uuid4()}_raw{os.path.splitext(file.name)[1]}"
             presigned_url = s3_client.generate_presigned_url('put_object',
                 Params={
                     'Bucket': bucket_name,
-                    'Key': f"{uuid4()}_raw{os.path.splitext(file.name)[1]}",
+                    'Key': file_key,
                     'ContentType': file.content_type
                 },
                 ExpiresIn=3600  # URL valid for 1 hour
@@ -60,11 +41,20 @@ async def get_upload_urls(request: UploadUrlsRequest, current_user: User = Depen
 @media_items_router.post('/save')
 async def save(new_media_item: NewMediaItem, dive_id:int = None, current_user: User = Depends(get_current_user)) -> MediaItem:
 
+    b2_prefix = os.getenv('B2_FRIENDLY_URL_PREFIX')
+    bucket_name = os.getenv("B2_BUCKET")
+    folder_name = f"user-{current_user.id}"
+    file_key = new_media_item.pre_signed_url.split('?')[0].split('/')[-1]  # Extract file key from the pre-signed URL
+    
+    # Construct the public URL
+    public_url = f"{b2_prefix}/{bucket_name}/{folder_name}/{file_key}"
+
+
     with Session(engine) as session:
         media_item = MediaItem(user_id=current_user.id,
                         filename=new_media_item.filename, 
-                        raw_url=new_media_item.raw_url,
-                        processed_url=new_media_item.raw_url, # Same for now as raw
+                        raw_url=public_url,
+                        processed_url=public_url, # Same for now as raw
                         mime_type=new_media_item.mime_type,
                         dive_id=dive_id)
         session.add(media_item)
