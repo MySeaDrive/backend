@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from ..helpers.storage import s3_client
+from ..helpers.storage import get_s3_client
 from ..models import MediaItem, UploadUrlsRequest, User, NewMediaItem
 from ..helpers.db import engine
 from ..helpers.auth import get_current_user
@@ -24,7 +24,7 @@ async def get_upload_urls(request: UploadUrlsRequest, current_user: User = Depen
     for file in request.files:
         try:
             file_key = f"user-{current_user.id}/{uuid4()}_raw{os.path.splitext(file.name)[1]}"
-            presigned_url = s3_client.generate_presigned_url('put_object',
+            presigned_url = get_s3_client().generate_presigned_url('put_object',
                 Params={
                     'Bucket': bucket_name,
                     'Key': file_key,

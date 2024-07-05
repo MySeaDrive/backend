@@ -1,4 +1,4 @@
-from helpers.storage import s3_client 
+from helpers.storage import get_s3_client 
 from botocore.exceptions import ClientError
 import os
 from dotenv import load_dotenv
@@ -9,10 +9,10 @@ def create_bucket(bucket_name):
 
     # Check if the bucket exists, if not create it
     try:
-        s3_client.head_bucket(Bucket=bucket_name)
+        get_s3_client().head_bucket(Bucket=bucket_name)
     except ClientError:
         try:
-            s3_client.create_bucket(Bucket=bucket_name)            
+            get_s3_client().create_bucket(Bucket=bucket_name)            
             
             # Set CORS configuration
             cors_configuration = {
@@ -23,7 +23,7 @@ def create_bucket(bucket_name):
                     'ExposeHeaders': ['ETag']
                 }]
             }
-            s3_client.put_bucket_cors(Bucket=bucket_name, CORSConfiguration=cors_configuration)
+            get_s3_client().put_bucket_cors(Bucket=bucket_name, CORSConfiguration=cors_configuration)
             
         except ClientError as e:
             print("Failed to create bucket")
