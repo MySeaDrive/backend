@@ -35,6 +35,9 @@ class MediaItem(SQLModel, table=True):
 class NewDive(BaseModel):
     name: str
 
+class UpdateDive(BaseModel):
+    name: str
+
 class NewMediaItem(BaseModel):
     filename: str
     pre_signed_url: str
