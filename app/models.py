@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, JSON, Column
 from uuid import UUID
 
 class User(SQLModel, table=True):
@@ -29,6 +29,7 @@ class MediaItem(SQLModel, table=True):
     mime_type: str
     user_id: UUID = Field(foreign_key= 'users.id') # Uploader
     dive_id: Optional[int] = Field(default= None, foreign_key='dives.id')
+    thumbnails: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
 
     dive: Optional[Dive] = Relationship(back_populates="media_items")
 

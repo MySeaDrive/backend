@@ -9,6 +9,8 @@ from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 import os
 from uuid import uuid4
+from ..jobs.thumbnail_generator import generate_thumbnails
+from ..queue_setup import thumbnail_queue
 
 # Load environment variables from the .env file
 load_dotenv('./secrets/.env')
@@ -59,4 +61,8 @@ async def save(new_media_item: NewMediaItem, dive_id:int = None, current_user: U
         session.add(media_item)
         session.commit()
         session.refresh(media_item)
+
+        # Enqueue thumbnail generation job
+        thumbnail_queue.enqueue(generate_thumbnails, media_item.id)
+
         return media_item
