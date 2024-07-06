@@ -63,6 +63,7 @@ class MediaItemResponse(BaseModel):
     raw_url: str
     processed_url: Optional[str]
     mime_type: str
+    thumbnails: Optional[List[str]]
 
     model_config = ConfigDict(from_attributes=True)
 

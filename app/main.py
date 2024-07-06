@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers.dives import dives_router
 from .routers.media_items import media_items_router
-from .jobs.thumbnail_generator import generate_thumbnails
 from rq_dashboard_fast import RedisQueueDashboard
 
 app = FastAPI()
