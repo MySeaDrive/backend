@@ -1,8 +1,8 @@
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from .routers.dives import dives_router
 from .routers.media_items import media_items_router
+from rq_dashboard_fast import RedisQueueDashboard
 
 app = FastAPI()
 
@@ -15,13 +15,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add routes
 app.include_router(dives_router)
 app.include_router(media_items_router)
-app.mount('/uploads', StaticFiles(directory='uploads'), name='uploads')
+
+# Mount RQ dashboard
+rq_dashboard = RedisQueueDashboard(prefix="/rq")
+app.mount("/rq", rq_dashboard)
+
 
 @app.get('/')
 async def root():
-    return {'hello': 'world'}
+    return {'hello': 'ocean'}
 
 def whale():
     whale = """

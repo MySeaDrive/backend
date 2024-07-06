@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from ..models import Dive, NewDive, User, DiveResponse, UpdateDive, MediaItem
 from ..helpers.db import engine
 from ..helpers.auth import get_current_user
-from ..helpers.storage import delete_file_from_b2
+from ..helpers.storage import delete_file_from_storage
 from sqlmodel import Session, select, update
 from typing import List
 
@@ -69,9 +69,9 @@ async def delete_dive(id: int, delete_media: bool = False, background_tasks: Bac
         if delete_media:
             media_items = session.exec(select(MediaItem).where(MediaItem.dive_id == id)).all()
             for media_item in media_items:
-                background_tasks.add_task(delete_file_from_b2, media_item.raw_url, current_user.id)
+                background_tasks.add_task(delete_file_from_storage, media_item.raw_url, current_user.id)
                 if media_item.processed_url and media_item.processed_url != media_item.raw_url:
-                    background_tasks.add_task(delete_file_from_b2, media_item.processed_url, current_user.id)
+                    background_tasks.add_task(delete_file_from_storage, media_item.processed_url, current_user.id)
                 session.delete(media_item)
         else:
             # If not deleting media, just set dive_id to None for associated media items

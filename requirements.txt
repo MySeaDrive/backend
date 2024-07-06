@@ -5,6 +5,10 @@ python-dotenv
 psycopg2-binary
 python-jose[cryptography]
 boto3
+rq 
+rq-dashboard-fast 
+pillow 
+opencv-python-headless
 
 # dev
 ipython

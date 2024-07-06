@@ -30,7 +30,7 @@ def create_bucket(bucket_name):
             print(str(e))
 
 if __name__ == "__main__":
-    bucket_name = os.getenv("B2_BUCKET")
+    bucket_name = os.getenv("STORAGE_BUCKET")
     if bucket_name:
         print("Creating bucket:", bucket_name)
         create_bucket(bucket_name)
