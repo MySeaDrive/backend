@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from ..helpers.storage import get_s3_client
-from ..models import MediaItem, UploadUrlsRequest, User, NewMediaItem
+from ..helpers.storage import get_s3_client, delete_file_from_storage
+from ..models import MediaItem, UploadUrlsRequest, User, NewMediaItem, Dive
 from ..helpers.db import engine
 from ..helpers.auth import get_current_user
 from sqlmodel import Session, select
@@ -65,4 +65,44 @@ async def save(new_media_item: NewMediaItem, dive_id:int = None, current_user: U
         # Enqueue thumbnail generation job
         thumbnail_queue.enqueue(generate_thumbnails, media_item.id)
 
+        return media_item
+    
+@media_items_router.delete('/{id}')
+async def delete_media_item(id: int, current_user: User = Depends(get_current_user)):
+    with Session(engine) as session:
+        media_item = session.get(MediaItem, id)
+        if not media_item or media_item.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Media item not found")
+        
+        # Delete the file from storage
+        delete_file_from_storage(media_item.raw_url, current_user.id)
+        if media_item.processed_url and media_item.processed_url != media_item.raw_url:
+            delete_file_from_storage(media_item.processed_url, current_user.id)
+        
+        # Delete thumbnails
+        if media_item.thumbnails:
+            for thumbnail in media_item.thumbnails:
+                delete_file_from_storage(thumbnail, current_user.id)
+        
+        session.delete(media_item)
+        session.commit()
+        
+        return {"message": "Media item deleted successfully"}
+
+@media_items_router.patch('/{id}/move')
+async def move_media_item(id: int, new_dive_id: int, current_user: User = Depends(get_current_user)):
+    with Session(engine) as session:
+        media_item = session.get(MediaItem, id)
+        if not media_item or media_item.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Media item not found")
+        
+        new_dive = session.get(Dive, new_dive_id)
+        if not new_dive or new_dive.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Destination dive not found")
+        
+        media_item.dive_id = new_dive_id
+        session.add(media_item)
+        session.commit()
+        session.refresh(media_item)
+        
         return media_item
