@@ -39,4 +39,7 @@ $ fastapi dev --port 5000 app/main.py
 Boot workers
 ```
 $ rq worker thumbnails
+$ rq worker color_correction
 ```
+
+Running on MacOS would need you to set `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
