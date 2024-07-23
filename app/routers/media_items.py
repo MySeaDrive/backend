@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 import os
 from uuid import uuid4
 from ..jobs.thumbnail_generator import generate_thumbnails
-from ..queue_setup import thumbnail_queue
+from ..jobs.color_corrector import color_correct_media
+from ..queue_setup import thumbnail_queue, color_correction_queue
 
 # Load environment variables from the .env file
 load_dotenv('./secrets/.env')
@@ -64,6 +65,10 @@ async def save(new_media_item: NewMediaItem, dive_id:int = None, current_user: U
 
         # Enqueue thumbnail generation job
         thumbnail_queue.enqueue(generate_thumbnails, media_item.id)
+
+        # Enqueue color correction job
+        color_correction_queue.enqueue(color_correct_media, media_item.id)
+
 
         return media_item
     

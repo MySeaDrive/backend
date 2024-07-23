@@ -9,6 +9,7 @@ rq
 rq-dashboard-fast 
 pillow 
 opencv-python-headless
+moviepy
 
 # dev
 ipython
