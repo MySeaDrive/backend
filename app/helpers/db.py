@@ -6,11 +6,7 @@ import os
 load_dotenv('./secrets/.env')
 
 # Get the database connection parameters from environment variables
-username = os.getenv('DB_USERNAME')
-password = os.getenv('DB_PASSWORD')
-host = os.getenv('DB_HOST')
-port = os.getenv('DB_PORT')
-database = os.getenv('DB_NAME')
+connection_string = os.getenv('DB_CONNECTION_STRING')
 
 # Create the engine
-engine = create_engine(f'postgresql://{username}:{password}@{host}:{port}/{database}')
+engine = create_engine(connection_string)
