@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from ..helpers.storage import get_s3_client, delete_file_from_storage
-from ..models import MediaItem, UploadUrlsRequest, User, NewMediaItem, Dive
+from ..models import MediaItem, UploadUrlsRequest, User, NewMediaItem, Dive, MediaItemState
 from ..helpers.db import engine
 from ..helpers.auth import get_current_user
 from sqlmodel import Session, select
@@ -58,6 +58,7 @@ async def save(new_media_item: NewMediaItem, dive_id:int = None, current_user: U
                         raw_url=public_url,
                         processed_url=public_url, # Same for now as raw
                         mime_type=new_media_item.mime_type,
+                        state=MediaItemState.PROCESSING,
                         dive_id=dive_id)
         session.add(media_item)
         session.commit()

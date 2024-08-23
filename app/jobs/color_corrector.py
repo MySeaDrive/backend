@@ -7,7 +7,7 @@ from moviepy.editor import VideoFileClip
 import os
 from uuid import uuid4
 from sqlmodel import Session
-from ..models import MediaItem
+from ..models import MediaItem, MediaItemState
 from ..helpers.db import engine
 from ..helpers.storage import upload_file_to_storage
 import tempfile
@@ -312,6 +312,7 @@ def color_correct_media(media_item_id: int):
         processed_url = f"{storage_endpoint}/{bucket_name}/{processed_key}"
         
         media_item.processed_url = processed_url
+        media_item.state = MediaItemState.READY
         session.commit()
 
         # Clean up temporary files

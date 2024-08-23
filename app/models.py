@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship, JSON, Column
 from uuid import UUID
+from enum import Enum
 
 class User(SQLModel, table=True):
     __tablename__ = 'users'
@@ -18,6 +19,10 @@ class Dive(SQLModel, table=True):
 
     media_items: List["MediaItem"] = Relationship(back_populates="dive")
 
+class MediaItemState(str, Enum):
+    PROCESSING = "processing"
+    READY = "ready"
+
 class MediaItem(SQLModel, table=True):
 
     __tablename__ = 'media_items'
@@ -30,6 +35,7 @@ class MediaItem(SQLModel, table=True):
     user_id: UUID = Field(foreign_key= 'users.id') # Uploader
     dive_id: Optional[int] = Field(default= None, foreign_key='dives.id')
     thumbnails: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
+    state: Optional[MediaItemState] = Field(default=None)
 
     dive: Optional[Dive] = Relationship(back_populates="media_items")
 
@@ -64,6 +70,7 @@ class MediaItemResponse(BaseModel):
     processed_url: Optional[str]
     mime_type: str
     thumbnails: Optional[List[str]]
+    state: MediaItemState
 
     model_config = ConfigDict(from_attributes=True)
 
