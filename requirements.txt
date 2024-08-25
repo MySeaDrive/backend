@@ -8,7 +8,8 @@ boto3
 rq 
 rq-dashboard-fast 
 pillow 
-opencv-python-headless
+# https://rockyshikoku.medium.com/use-h264-codec-with-cv2-videowriter-e00145ded181
+# opencv-python-headless
 moviepy
 
 # dev

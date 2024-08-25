@@ -68,7 +68,7 @@ async def save(new_media_item: NewMediaItem, dive_id:int = None, current_user: U
         thumbnail_queue.enqueue(generate_thumbnails, media_item.id)
 
         # Enqueue color correction job
-        color_correction_queue.enqueue(color_correct_media, media_item.id)
+        color_correction_queue.enqueue(color_correct_media, media_item.id, job_timeout=600)
 
 
         return media_item
