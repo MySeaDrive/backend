@@ -3,6 +3,8 @@ from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship, JSON, Column
 from uuid import UUID
 from enum import Enum
+from datetime import datetime
+from sqlalchemy import DateTime, func
 
 class User(SQLModel, table=True):
     __tablename__ = 'users'
@@ -36,6 +38,10 @@ class MediaItem(SQLModel, table=True):
     dive_id: Optional[int] = Field(default= None, foreign_key='dives.id')
     thumbnails: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
     state: Optional[MediaItemState] = Field(default=None)
+    created_at: datetime = Field(
+        default_factory=func.now,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
 
     dive: Optional[Dive] = Relationship(back_populates="media_items")
 
@@ -71,6 +77,7 @@ class MediaItemResponse(BaseModel):
     mime_type: str
     thumbnails: Optional[List[str]]
     state: MediaItemState
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
