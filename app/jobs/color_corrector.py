@@ -209,8 +209,8 @@ def process_video_internal(video_data):
 
     # Change the codec to H.264
     fourcc = cv2.VideoWriter_fourcc(*'avc1')
-    temp_output_path = video_data["output_video_path"] + "_temp.mp4"
-    new_video = cv2.VideoWriter(temp_output_path, fourcc, video_data["fps"], (frame_width, frame_height))      
+    corrected_without_audio_output_path = f"/tmp/{uuid4()}.mp4"
+    new_video = cv2.VideoWriter(corrected_without_audio_output_path, fourcc, video_data["fps"], (frame_width, frame_height))      
 
     filter_matrices = video_data["filters"]
     filter_indices = video_data["filter_indices"]
@@ -247,14 +247,18 @@ def process_video_internal(video_data):
 
     # Combine processed video with original audio
     print("Combining video and audio...")
+    
     original_clip = VideoFileClip(video_data["input_video_path"])
-    processed_clip = VideoFileClip(temp_output_path)
-    final_clip = processed_clip.set_audio(original_clip.audio)
+    corrected_without_audio_clip = VideoFileClip(corrected_without_audio_output_path)
+    final_clip = corrected_without_audio_clip.set_audio(original_clip.audio)
     final_clip.write_videofile(video_data["output_video_path"], codec="libx264", audio_codec="aac")
 
+    final_clip.close()
+    corrected_without_audio_clip.close()
+    original_clip.close()
+
     # Clean up temporary file
-    import os
-    os.remove(temp_output_path)
+    os.unlink(corrected_without_audio_output_path)
 
     print("Processing complete.")
 
