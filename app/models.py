@@ -6,6 +6,7 @@ from enum import Enum
 from datetime import datetime
 from sqlalchemy import DateTime, func
 
+
 class User(SQLModel, table=True):
     __tablename__ = 'users'
 
@@ -20,6 +21,7 @@ class Dive(SQLModel, table=True):
     user_id: UUID = Field(foreign_key= 'users.id') # Diver
 
     media_items: List["MediaItem"] = Relationship(back_populates="dive")
+    log: Optional["Log"] = Relationship(back_populates="dive")
 
 class MediaItemState(str, Enum):
     PROCESSING = "processing"
@@ -45,6 +47,26 @@ class MediaItem(SQLModel, table=True):
 
     dive: Optional[Dive] = Relationship(back_populates="media_items")
 
+class Log(SQLModel, table=True):
+    __tablename__ = 'logs'
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    dive_id: int = Field(foreign_key="dives.id", unique=True)
+    starting_air: Optional[int] = Field(default=None)  # in bar
+    ending_air: Optional[int] = Field(default=None)  # in bar
+    dive_start_time: Optional[datetime] = Field(default=None)
+    dive_duration: Optional[int] = Field(default=None)  # in minutes
+    max_depth: Optional[float] = Field(default=None)  # in metres
+    visibility: Optional[float] = Field(default=None)  # in metres
+    water_temperature: Optional[float] = Field(default=None)  # in centigrade
+    wetsuit_thickness: Optional[int] = Field(default=None)  # in mm
+    wetsuit_type: Optional[str] = Field(default=None)
+    weights: Optional[float] = Field(default=None)  # in kg
+    fish_ids: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
+    notes: Optional[str] = Field(default=None)
+
+    dive: Dive = Relationship(back_populates="log")
+    
 class NewDive(BaseModel):
     name: str
 
@@ -86,5 +108,25 @@ class DiveResponse(BaseModel):
     name: str
     user_id: UUID
     media_items: List[MediaItemResponse]
+
+    model_config = ConfigDict(from_attributes=True)
+
+class LogCreate(BaseModel):
+    starting_air: Optional[int] = None
+    ending_air: Optional[int] = None
+    dive_start_time: Optional[datetime] = None
+    dive_duration: Optional[int] = None
+    max_depth: Optional[float] = None
+    visibility: Optional[float] = None
+    water_temperature: Optional[float] = None
+    wetsuit_thickness: Optional[int] = None
+    wetsuit_type: Optional[str] = None
+    weights: Optional[float] = None
+    fish_ids: Optional[List[str]] = None
+    notes: Optional[str] = None
+
+class LogResponse(LogCreate):
+    id: int
+    dive_id: int
 
     model_config = ConfigDict(from_attributes=True)

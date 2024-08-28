@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
-from ..models import Dive, NewDive, User, DiveResponse, UpdateDive, MediaItem
+from ..models import Dive, NewDive, User, DiveResponse, UpdateDive, MediaItem, Log, LogCreate, LogResponse
 from ..helpers.db import engine
 from ..helpers.auth import get_current_user
 from ..helpers.storage import delete_file_from_storage
@@ -81,3 +81,46 @@ async def delete_dive(id: int, delete_media: bool = False, background_tasks: Bac
         session.commit()
         
         return {"message": "Dive deleted successfully"}
+    
+@dives_router.get('/{dive_id}/log')
+async def get_dive_log(dive_id: int, current_user: User = Depends(get_current_user)) -> LogResponse:
+    with Session(engine) as session:
+        query = select(Dive).where(Dive.id == dive_id, Dive.user_id == current_user.id)
+        dive = session.exec(query).first()
+
+        if not dive:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dive not found")
+        
+        log = session.exec(select(Log).where(Log.dive_id == dive_id)).first()
+        
+        if not log:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log not found for this dive")
+        
+        return LogResponse.model_validate(log)
+    
+@dives_router.post('/{dive_id}/log')
+async def create_or_update_dive_log(dive_id: int, log_data: LogCreate, current_user: User = Depends(get_current_user)) -> LogResponse:
+    with Session(engine) as session:
+        query = select(Dive).where(Dive.id == dive_id, Dive.user_id == current_user.id)
+        dive = session.exec(query).first()
+
+        if not dive:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dive not found")
+        
+        existing_log = session.exec(select(Log).where(Log.dive_id == dive_id)).first()
+
+        if existing_log:
+
+            for key, value in log_data.model_dump(exclude_unset=True).items():
+                setattr(existing_log, key, value)
+            log = existing_log
+
+        else:
+            log_data_dict = log_data.model_dump(exclude_unset=True)
+            log = Log(dive_id=dive_id, **log_data_dict)
+            session.add(log)
+        
+        session.commit()
+        session.refresh(log)
+        
+        return LogResponse.model_validate(log)
