@@ -11,6 +11,7 @@ pillow
 # https://rockyshikoku.medium.com/use-h264-codec-with-cv2-videowriter-e00145ded181
 # opencv-python-headless
 moviepy
+alembic
 
 # dev
 ipython
