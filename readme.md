@@ -39,3 +39,4 @@ $ rq worker color_correction
 ```
 
 Running on MacOS would need you to set `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
+
