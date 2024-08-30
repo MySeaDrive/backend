@@ -44,6 +44,7 @@ class MediaItem(SQLModel, table=True):
         default_factory=func.now,
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )
+    is_favorite: bool = Field(default=False)
 
     dive: Optional[Dive] = Relationship(back_populates="media_items")
 
@@ -100,6 +101,7 @@ class MediaItemResponse(BaseModel):
     thumbnails: Optional[List[str]]
     state: MediaItemState
     created_at: datetime
+    is_favorite: bool
 
     model_config = ConfigDict(from_attributes=True)
 

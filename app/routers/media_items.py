@@ -112,3 +112,17 @@ async def move_media_item(id: int, new_dive_id: int, current_user: User = Depend
         session.refresh(media_item)
         
         return media_item
+    
+@media_items_router.post('/{id}/toggle_favorite')
+async def toggle_favorite(id: int, current_user: User = Depends(get_current_user)):
+    with Session(engine) as session:
+        media_item = session.get(MediaItem, id)
+        if not media_item or media_item.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Media item not found")
+
+        media_item.is_favorite = not media_item.is_favorite
+        session.add(media_item)
+        session.commit()
+        session.refresh(media_item)
+
+        return {"id": media_item.id, "is_favorite": media_item.is_favorite}
