@@ -1,0 +1,34 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Deploy to server
+      env:
+        PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        SERVER_USER: deploy
+        SERVER_HOST: api.myseadrive.com
+        SERVER_PORT: 22
+        APP_DIR: /home/deploy/backend
+        VENV_PATH: /home/deploy/.venv
+      run: |
+        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+        ssh -o StrictHostKeyChecking=no -i private_key -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} << EOF
+          cd ${APP_DIR}
+          git pull origin main
+          source ${VENV_PATH}/bin/activate
+          pip install -r requirements.txt
+          alembic upgrade head
+          sudo systemctl restart fastapi
+          sudo supervisorctl restart rq_thumbnails
+          sudo supervisorctl restart rq_color_correction
+        EOF
