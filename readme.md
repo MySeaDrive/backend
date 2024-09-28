@@ -43,3 +43,27 @@ Running on MacOS would need you to set `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
 ### Suggested deployment
 - Run FastAPI as application server using uvicorn
 - Run workers using supervisor
+
+
+### Supabase trigger setup
+
+```
+-- Create function
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, raw_app_meta_data, raw_user_meta_data)
+  VALUES (
+    new.id,
+    new.raw_app_meta_data,
+    new.raw_user_meta_data
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Ensure the trigger is set up (if not already)
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+```
