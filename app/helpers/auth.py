@@ -31,13 +31,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             query = select(User).where(User.id == response.user.id)
             user = session.exec(query).first()
         
-        if not user:
-            # If user doesn't exist in our database, create a new one
-            new_user = User(id=response.user.id, email=response.user.email)
-            session.add(new_user)
-            session.commit()
-            user = new_user
-        
         return user
 
     except JWTError:
