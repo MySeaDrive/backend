@@ -32,6 +32,7 @@ def delete_file_from_storage(file_url: str, user_id: UUID):
     file_key = f"user-{user_id}/{parsed_url.path.split('/')[-1]}"
 
     try:
+        print("Deleting:", file_key)
         get_s3_client().delete_object(Bucket=os.getenv("STORAGE_BUCKET"), Key=file_key)
     except Exception as e:
         print(f"Error deleting file from storage: {str(e)}")
