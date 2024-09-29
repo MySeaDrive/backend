@@ -167,7 +167,7 @@ def analyze_video(input_video_path, output_video_path):
     while(cap.isOpened()):
         
         count += 1  
-        print(f"{count} frames", end="\r")
+        # print(f"{count} frames", end="\r")
         ret, frame = cap.read()
         if not ret:
             # End video read if we have gone beyond reported frame count
@@ -227,7 +227,7 @@ def process_video_internal(video_data):
     while cap.isOpened():
         count += 1  
         percent = 100*count/frame_count
-        print("{:.2f}".format(percent), end=" % \r")
+        # print("{:.2f}".format(percent), end=" % \r")
         ret, frame = cap.read()
         
         if not ret:
