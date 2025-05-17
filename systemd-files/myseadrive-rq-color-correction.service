@@ -1,0 +1,16 @@
+[Unit]
+Description=RQ Worker - Color Correction (Production)
+After=network.target
+
+[Service]
+User=deploy
+Group=deploy
+WorkingDirectory=/home/deploy/backend
+ExecStart=/home/deploy/.venv/bin/uv run rq worker color_correction
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+Environment=ENV=production
+
+[Install]
+WantedBy=multi-user.target
