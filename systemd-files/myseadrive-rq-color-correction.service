@@ -5,8 +5,8 @@ After=network.target
 [Service]
 User=deploy
 Group=deploy
-WorkingDirectory=/home/deploy/backend
-ExecStart=/home/deploy/.venv/bin/uv run rq worker color_correction
+WorkingDirectory=/home/deploy/myseadrive/backend
+ExecStart=/home/deploy/myseadrive/backend/.venv/bin/rq worker color_correction
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
