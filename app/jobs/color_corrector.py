@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import math
 import math
-from moviepy.editor import VideoFileClip
+from moviepy.video.io.VideoFileClip import VideoFileClip
 import os
 from uuid import uuid4
 from sqlmodel import Session
