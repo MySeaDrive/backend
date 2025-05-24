@@ -13,8 +13,8 @@ from ..helpers.storage import upload_file_to_storage
 import tempfile
 import requests
 
-THRESHOLD_RATIO = 2000
-MIN_AVG_RED = 60
+THRESHOLD_RATIO = 1500
+MIN_AVG_RED = 80
 MAX_HUE_SHIFT = 120
 BLUE_MAGIC_VALUE = 1.2
 SAMPLE_SECONDS = 2 # Extracts color correction from every N seconds
@@ -250,7 +250,7 @@ def process_video_internal(video_data):
     
     original_clip = VideoFileClip(video_data["input_video_path"])
     corrected_without_audio_clip = VideoFileClip(corrected_without_audio_output_path)
-    final_clip = corrected_without_audio_clip.set_audio(original_clip.audio)
+    final_clip = corrected_without_audio_clip.with_audio(original_clip.audio)
     final_clip.write_videofile(video_data["output_video_path"], codec="libx264", audio_codec="aac")
 
     final_clip.close()

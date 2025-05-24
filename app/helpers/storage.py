@@ -21,7 +21,7 @@ def get_s3_client():
         aws_access_key_id=os.getenv('STORAGE_APPLICATION_KEY_ID'),
         aws_secret_access_key=os.getenv('STORAGE_APPLICATION_KEY'),
         region_name=os.getenv('STORAGE_REGION'),
-        config=Config(signature_version='s3v4')
+        config=Config(signature_version='s3v4', s3={'checksum_algorithm': None})
     )
 
 def upload_file_to_storage(file_obj, file_key):
