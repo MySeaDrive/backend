@@ -4,8 +4,7 @@ from sqlmodel import SQLModel, Field, Relationship, JSON, Column
 from uuid import UUID
 from enum import Enum
 from datetime import datetime
-from sqlalchemy import DateTime, func
-
+from sqlalchemy import DateTime, func, Column, Integer, ForeignKey
 
 class User(SQLModel, table=True):
     __tablename__ = 'users'
@@ -52,7 +51,16 @@ class Log(SQLModel, table=True):
     __tablename__ = 'logs'
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    dive_id: int = Field(foreign_key="dives.id", unique=True)
+    dive_id: int = Field(
+        sa_column=Column(
+            Integer,
+            ForeignKey("dives.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+        )
+    )
+    dive: Dive = Relationship(back_populates="log")
+
     starting_air: Optional[int] = Field(default=None)  # in bar
     ending_air: Optional[int] = Field(default=None)  # in bar
     dive_start_time: Optional[datetime] = Field(default=None)
@@ -66,7 +74,6 @@ class Log(SQLModel, table=True):
     fish_ids: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
     notes: Optional[str] = Field(default=None)
 
-    dive: Dive = Relationship(back_populates="log")
     
 class NewDive(BaseModel):
     name: str

@@ -20,6 +20,7 @@ def get_s3_client():
         endpoint_url=os.getenv('STORAGE_ENDPOINT_URL'),
         aws_access_key_id=os.getenv('STORAGE_APPLICATION_KEY_ID'),
         aws_secret_access_key=os.getenv('STORAGE_APPLICATION_KEY'),
+        region_name=os.getenv('STORAGE_REGION'),
         config=Config(signature_version='s3v4')
     )
 
